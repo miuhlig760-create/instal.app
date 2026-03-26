@@ -1,101 +1,65 @@
 import streamlit as st
-import instaloader
-import time
+import httpx
+import re
 
-# إعدادات الصفحة
-st.set_page_config(page_title="Instal - انستيل", page_icon="✨")
+# إعدادات الواجهة مع ستايل "فرح" التفاعلي
+st.set_config(page_title="Instal Pro", page_icon="✨")
 
-# دالة لتشغيل صوت الكليك
-def play_click():
-    sound_url = "https://www.soundjay.com/buttons/sounds/button-16.mp3"
-    st.markdown(f'<audio autoplay><source src="{sound_url}" type="audio/mp3"></audio>', unsafe_allow_html=True)
-
-# الستايل المتقدم
 st.markdown("""
     <style>
-    /* خلفية داكنة فخمة */
-    .stApp {
-        background-color: #050505;
+    .stApp { background-color: #050505; }
+    h1 { color: #00d2ff !important; text-align: center; font-family: 'Cairo', sans-serif; }
+    .stButton>button { 
+        background: linear-gradient(45deg, #00d2ff, #3a7bd5); 
+        color: white; border-radius: 10px; width: 100%; border: none; height: 3em;
     }
-
-    /* تحسين الخط وجعله واضحاً جداً */
-    h1, h2, p, span, label, input {
-        font-family: 'Cairo', sans-serif;
-        color: #ffffff !important;
-        font-weight: 700 !important;
-    }
-
-    /* تصميم خانة الإدخال - خط واضح وعريض */
-    .stTextInput>div>div>input {
-        font-size: 22px !important;
-        font-weight: bold !important;
-        color: #00d2ff !important;
-        background-color: #111 !important;
-        border: 2px solid #3a7bd5 !important;
-        border-radius: 15px !important;
-        text-align: center;
-    }
-
-    /* الزر بستايل جديد وبدون أيقونات */
-    .stButton>button {
-        background: linear-gradient(45deg, #ff00cc, #3333ff);
-        color: white !important;
-        border-radius: 15px;
-        padding: 20px;
-        font-size: 24px !important;
-        border: none;
-        width: 100%;
-        transition: 0.3s;
-    }
-
-    /* تأثير الضغط على اسم فرح (القلوب) */
-    .farah-btn {
-        background: none;
-        border: none;
-        color: #f8a5c2;
-        font-size: 30px;
-        font-family: 'Cursive', sans-serif;
-        font-weight: bold;
-        cursor: pointer;
-        transition: 0.5s;
-        text-decoration: none;
-    }
-    
-    /* إخفاء الصاروخ وأي أيقونات إضافية */
-    .st-emotion-cache-10trblm { display: none; } 
+    .farah-touch { color: #f8a5c2; font-weight: bold; cursor: pointer; text-align: center; }
     </style>
 """, unsafe_allow_html=True)
 
-# العنوان
-st.markdown("<h1 style='text-align: center; font-size: 50px;'>انستيل - INSTAL</h1>", unsafe_allow_html=True)
-st.markdown("<p style='text-align: center; font-size: 20px; color: #888;'>الفحص المتقدم للحسابات</p>", unsafe_allow_html=True)
+st.title("🚀 انستيل - النسخة السريعة")
 
-# واجهة البحث
-user_input = st.text_input("ادخل اسم المستخدم:")
+user_input = st.text_input("أدخل اسم المستخدم (بدون @):")
 
-if st.button("بدء التحليل"):
+if st.button("تحليل الآن 🔍"):
     if user_input:
-        play_click()
-        user_input = user_input.replace('@', '').strip()
+        user_input = user_input.strip()
         try:
-            with st.spinner('جاري العمل...'):
-                L = instaloader.Instaloader()
-                L.context.user_agent = "Mozilla/5.0"
-                profile = instaloader.Profile.from_username(L.context, user_input)
+            with st.spinner('جاري كسر الحظر وجلب البيانات...'):
+                # استخدام متصفح وهمي متطور لتجاوز الحماية
+                headers = {
+                    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+                    "Accept-Language": "en-US,en;q=0.9"
+                }
                 
-                st.success(f"الاسم: {profile.full_name}")
-                c1, c2 = st.columns(2)
-                c1.metric("المتابعين", f"{profile.followers:,}")
-                date = str(profile.created_at).split()[0] if profile.created_at else "2015"
-                c2.metric("التاريخ", date)
-        except:
-            st.error("الموقع في حالة حظر مؤقت، جرب لاحقاً.")
+                # جلب البيانات مباشرة من رابط JSON العام لإنستغرام
+                url = f"https://www.instagram.com/{user_input}/?__a=1&__d=dis"
+                
+                with httpx.Client(headers=headers, follow_redirects=True) as client:
+                    response = client.get(url)
+                    
+                    if response.status_code == 200:
+                        data = response.json()
+                        user_data = data['graphql']['user']
+                        
+                        st.balloons()
+                        st.success(f"تم العثور على: {user_data['full_name']}")
+                        
+                        col1, col2 = st.columns(2)
+                        col1.metric("المتابعين", f"{user_data['edge_followed_by']['count']:,}")
+                        # حساب تقريبي لتاريخ الإنشاء بناءً على الـ ID (تقنية احترافية)
+                        insta_id = int(user_data['id'])
+                        year = "2010-2012" if insta_id < 20000000 else "2013-2015" if insta_id < 500000000 else "2016-2024"
+                        col2.metric("فترة الإنشاء", year)
+                    else:
+                        st.error("إنستغرام لا يزال يرفض الاتصال المباشر.")
+                        st.info("💡 **جرب هذه الخدعة:** ادخل على الموقع من متصفح (Incognito) أو "نافذة خاصة" في موبايلك وسيشتغل!")
+        except Exception as e:
+            st.warning("الحساب خاص (Private) أو اليوزر غير صحيح.")
+    else:
+        st.warning("اكتب اليوزر أولاً!")
 
-# الجزء الخاص بـ "فرح" والقلوب
-st.write("---")
-col_f, _ = st.columns([1, 4])
-with col_f:
-    if st.button("farah"):
-        st.balloons() # سيظهر بالونات على شكل قلوب وألوان احتفالية
-        st.snow() # تأثير إضافي ناعم
-        st.markdown("<h3 style='color: #ff00cc; text-align: center;'>❤️ ✨ ❤️</h3>", unsafe_allow_html=True)
+# تفاعل فرح
+if st.button("𝓕𝓪𝓻𝓪𝓱 ✨"):
+    st.snow()
+    st.write("❤️ تحية من المطورة فرح ❤️")
