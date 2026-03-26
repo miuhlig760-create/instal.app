@@ -2,20 +2,18 @@ import streamlit as st
 import httpx
 import re
 
-# إعدادات الصفحة
 st.set_page_config(page_title="Instal Pro", page_icon="✨")
 
-# الستايل المحدث (بدون صاروخ، خط عريض، وتفاعل فرح)
+# الستايل الفخم اللي طلبته
 st.markdown("""
     <style>
     .stApp { background-color: #050505; }
-    h1 { color: #00d2ff !important; text-align: center; font-family: 'Cairo', sans-serif; font-size: 45px; font-weight: 800; }
+    h1 { color: #00d2ff !important; text-align: center; font-family: 'Cairo', sans-serif; font-size: 45px; font-weight: bold; }
     .stButton>button { 
         background: linear-gradient(45deg, #00d2ff, #3a7bd5); 
         color: white !important; border-radius: 12px; width: 100%; border: none; height: 3.5em; font-weight: bold; font-size: 22px;
     }
-    input { font-size: 22px !important; font-weight: bold !important; text-align: center !important; color: #00d2ff !important; }
-    .farah-btn { color: #f8a5c2; font-size: 30px; font-weight: bold; cursor: pointer; text-align: center; display: block; margin-top: 20px; text-decoration: none; }
+    input { font-size: 22px !important; font-weight: bold !important; text-align: center !important; color: #00d2ff !important; background-color: #111 !important; }
     </style>
 """, unsafe_allow_html=True)
 
@@ -27,37 +25,43 @@ if st.button("فحص الحساب الآن 🔍"):
     if user_input:
         user_input = user_input.replace('@', '').strip()
         try:
-            with st.spinner('جاري جلب البيانات...'):
+            with st.spinner('جاري تخطي الحواجز...'):
+                # هذه الـ Headers توهم إنستغرام أنك تستخدم متصفح حقيقي من جهاز كمبيوتر
                 headers = {
-                    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+                    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36",
+                    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8",
+                    "Accept-Language": "en-US,en;q=0.9",
+                    "Sec-Fetch-Dest": "document",
+                    "Sec-Fetch-Mode": "navigate",
+                    "Sec-Fetch-Site": "none",
+                    "Upgrade-Insecure-Requests": "1"
                 }
+                
                 url = f"https://www.instagram.com/{user_input}/"
                 
-                with httpx.Client(headers=headers, follow_redirects=True) as client:
+                # استخدام Session للحفاظ على الاتصال
+                with httpx.Client(headers=headers, follow_redirects=True, timeout=10.0) as client:
                     response = client.get(url)
                     
                     if response.status_code == 200:
-                        # استخراج المتابعين والمنشورات من كود الصفحة
-                        meta = re.search(r'meta content="([\d,.]+[KMB]?) Followers, ([\d,.]+[KMB]?) Following, ([\d,.]+[KMB]?) Posts', response.text)
+                        # استخراج البيانات من الـ Meta Tags
+                        meta = re.search(r'meta content="([\d,.]+[KMB]?) Followers', response.text)
                         
                         if meta:
                             st.balloons()
-                            st.success(f"الحساب: {user_input}")
-                            c1, c2 = st.columns(2)
-                            c1.metric("المتابعين", meta.group(1))
-                            c2.metric("المنشورات", meta.group(3))
+                            st.success(f"تم العثور على: {user_input}")
+                            st.metric("المتابعين", meta.group(1))
                         else:
-                            st.warning("الحساب خاص أو لم يتم العثور على بيانات.")
+                            st.warning("إنستغرام يطلب تسجيل الدخول لرؤية هذا الحساب.")
                     else:
-                        st.error("تعذر الاتصال بإنستغرام حالياً.")
+                        st.error("السيرفر محظور حالياً من قبل إنستغرام.")
+                        st.info("💡 نصيحة: جرب تفتح الموقع من 'بيانات الهاتف' وليس الواي فاي.")
         except Exception as e:
-            st.error("حدث خطأ أثناء الفحص.")
+            st.error("حدث خطأ في الاتصال.")
     else:
-        st.warning("يرجى إدخال اليوزر!")
+        st.warning("دخل اليوزر يا غالي!")
 
-# زر فرح التفاعلي
-st.write("---")
+# تفاعل فرح
 if st.button("𝓕𝓪𝓻𝓪𝓱 ✨"):
     st.balloons()
     st.snow()
-    st.markdown("<h2 style='text-align: center; color: #f8a5c2;'>❤️ 𝓕𝓪𝓻𝓪𝓱 ❤️</h2>", unsafe_allow_html=True)
