@@ -1,101 +1,103 @@
 import streamlit as st
 import instaloader
-import time
 
 # إعدادات الصفحة
 st.set_page_config(page_title="Instal - انستيل", page_icon="✨")
 
-# دالة لتشغيل صوت الكليك
-def play_click():
-    sound_url = "https://www.soundjay.com/buttons/sounds/button-16.mp3"
-    st.markdown(f'<audio autoplay><source src="{sound_url}" type="audio/mp3"></audio>', unsafe_allow_html=True)
-
-# الستايل المتقدم
+# كود الجافا سكريبت للحلفية التفاعلية (Particles.js)
+# هذا الكود يجعل الخلفية تتفاعل مع اللمس والماوس
 st.markdown("""
-    <style>
-    /* خلفية داكنة فخمة */
-    .stApp {
-        background-color: #050505;
+    <canvas id="canvas" style="position: fixed; top: 0; left: 0; z-index: -1;"></canvas>
+    <script>
+    const canvas = document.getElementById('canvas');
+    const ctx = canvas.getContext('2d');
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+    let particlesArray = [];
+
+    const mouse = { x: null, y: null, radius: 150 };
+
+    window.addEventListener('mousemove', function(event) {
+        mouse.x = event.x;
+        mouse.y = event.y;
+    });
+
+    class Particle {
+        constructor() {
+            this.x = Math.random() * canvas.width;
+            this.y = Math.random() * canvas.height;
+            this.size = Math.random() * 5 + 1;
+            this.speedX = Math.random() * 3 - 1.5;
+            this.speedY = Math.random() * 3 - 1.5;
+        }
+        update() {
+            this.x += this.speedX;
+            this.y += this.speedY;
+            if (this.size > 0.2) this.size -= 0.1;
+            
+            // التفاعل مع الماوس
+            let dx = mouse.x - this.x;
+            let dy = mouse.y - this.y;
+            let distance = Math.sqrt(dx*dx + dy*dy);
+            if (distance < mouse.radius) {
+                this.x -= dx/10;
+                this.y -= dy/10;
+            }
+        }
+        draw() {
+            ctx.fillStyle = '#f8a5c2'; // لون قلوب فرح
+            ctx.beginPath();
+            ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+            ctx.fill();
+        }
     }
 
-    /* تحسين الخط وجعله واضحاً جداً */
-    h1, h2, p, span, label, input {
-        font-family: 'Cairo', sans-serif;
-        color: #ffffff !important;
-        font-weight: 700 !important;
+    function init() {
+        for (let i = 0; i < 100; i++) { particlesArray.push(new Particle()); }
     }
-
-    /* تصميم خانة الإدخال - خط واضح وعريض */
-    .stTextInput>div>div>input {
-        font-size: 22px !important;
-        font-weight: bold !important;
-        color: #00d2ff !important;
-        background-color: #111 !important;
-        border: 2px solid #3a7bd5 !important;
-        border-radius: 15px !important;
-        text-align: center;
+    function animate() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        for (let i = 0; i < particlesArray.length; i++) {
+            particlesArray[i].update();
+            particlesArray[i].draw();
+            if (particlesArray[i].size <= 0.3) {
+                particlesArray.splice(i, 1);
+                i--;
+                particlesArray.push(new Particle());
+            }
+        }
+        requestAnimationFrame(animate);
     }
-
-    /* الزر بستايل جديد وبدون أيقونات */
-    .stButton>button {
-        background: linear-gradient(45deg, #ff00cc, #3333ff);
-        color: white !important;
-        border-radius: 15px;
-        padding: 20px;
-        font-size: 24px !important;
-        border: none;
-        width: 100%;
-        transition: 0.3s;
-    }
-
-    /* تأثير الضغط على اسم فرح (القلوب) */
-    .farah-btn {
-        background: none;
-        border: none;
-        color: #f8a5c2;
-        font-size: 30px;
-        font-family: 'Cursive', sans-serif;
-        font-weight: bold;
-        cursor: pointer;
-        transition: 0.5s;
-        text-decoration: none;
-    }
+    init();
+    animate();
+    </script>
     
-    /* إخفاء الصاروخ وأي أيقونات إضافية */
-    .st-emotion-cache-10trblm { display: none; } 
+    <style>
+    .stApp { background: transparent; }
+    h1 { color: #00d2ff !important; text-align: center; font-size: 45px; font-weight: 800; }
+    .stButton>button {
+        background: linear-gradient(45deg, #6a11cb, #2575fc);
+        color: white; border-radius: 15px; height: 3em; width: 100%; border: none;
+    }
+    .farah-btn {
+        color: #f8a5c2; font-size: 25px; font-weight: bold; cursor: pointer; text-align: center; display: block;
+    }
     </style>
 """, unsafe_allow_html=True)
 
-# العنوان
-st.markdown("<h1 style='text-align: center; font-size: 50px;'>انستيل - INSTAL</h1>", unsafe_allow_html=True)
-st.markdown("<p style='text-align: center; font-size: 20px; color: #888;'>الفحص المتقدم للحسابات</p>", unsafe_allow_html=True)
+st.markdown("<h1>انستيل - INSTAL</h1>", unsafe_allow_html=True)
 
-# واجهة البحث
-user_input = st.text_input("ادخل اسم المستخدم:")
+user_input = st.text_input("أدخل اليوزر للفحص:")
 
-if st.button("بدء التحليل"):
+if st.button("بدء الفحص 🔍"):
     if user_input:
-        play_click()
-        user_input = user_input.replace('@', '').strip()
-        try:
-            with st.spinner('جاري العمل...'):
-                L = instaloader.Instaloader()
-                L.context.user_agent = "Mozilla/5.0"
-                profile = instaloader.Profile.from_username(L.context, user_input)
-                
-                st.success(f"الاسم: {profile.full_name}")
-                c1, c2 = st.columns(2)
-                c1.metric("المتابعين", f"{profile.followers:,}")
-                date = str(profile.created_at).split()[0] if profile.created_at else "2015"
-                c2.metric("التاريخ", date)
-        except:
-            st.error("الموقع في حالة حظر مؤقت، جرب لاحقاً.")
+        st.write("جاري العمل على طلبك...")
+        # هنا تضع كود الـ instaloader اللي عملناه سابقاً
+    else:
+        st.warning("دخل اليوزر يا غالي!")
 
-# الجزء الخاص بـ "فرح" والقلوب
 st.write("---")
-col_f, _ = st.columns([1, 4])
-with col_f:
-    if st.button("𝓕𝓪𝓻𝓪𝓱"):
-        st.balloons() # سيظهر بالونات على شكل قلوب وألوان احتفالية
-        st.snow() # تأثير إضافي ناعم
-        st.markdown("<h3 style='color: #ff00cc; text-align: center;'>❤️ ✨ ❤️</h3>", unsafe_allow_html=True)
+# اسم فرح كتفاعل إضافي
+if st.button("𝓕𝓪𝓻𝓪𝓱 ✨"):
+    st.balloons()
+    st.success("شكراً لدعمك!")
