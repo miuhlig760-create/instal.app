@@ -95,7 +95,7 @@ if st.button("بدء التحليل"):
 st.write("---")
 col_f, _ = st.columns([1, 4])
 with col_f:
-    if st.button("هالة الصويلح"):
+    if st.button("farah"):
         st.balloons() # سيظهر بالونات على شكل قلوب وألوان احتفالية
         st.snow() # تأثير إضافي ناعم
         st.markdown("<h3 style='color: #ff00cc; text-align: center;'>❤️ ✨ ❤️</h3>", unsafe_allow_html=True)
