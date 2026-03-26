@@ -1,9 +1,10 @@
 import streamlit as st
 import instaloader
 
-st.set_page_config(page_title="Instal - انستيل", page_icon="📸")
+# إعدادات الصفحة الأساسية
+st.set_page_config(page_title="Instal - انستيل", page_icon="🚀")
 
-# تصميم الواجهة الأنيق
+# تصميم الواجهة الأنيق بلمسة فرح
 st.markdown("""
     <style>
     .stApp { background-color: #0e1117; }
@@ -14,16 +15,18 @@ st.markdown("""
     }
     .stButton>button {
         background: linear-gradient(45deg, #6a11cb, #2575fc);
-        color: white; border-radius: 12px; width: 100%; border: none; height: 3em;
+        color: white; border-radius: 12px; width: 100%; border: none; height: 3.5em; font-weight: bold;
     }
-    h1, h2, p, span, label { color: white !important; font-family: 'Segoe UI', sans-serif; }
+    h1, h2, p, span, label { color: white !important; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; text-align: center; }
+    .stTextInput>div>div>input { text-align: center; border-radius: 10px; }
     </style>
     <div class="farah-style">𝓕𝓪𝓻𝓪𝓱 ✨</div>
 """, unsafe_allow_html=True)
 
-st.title("🚀 انستيل - Instal")
+st.title("🚀 Instal - انستيل")
 st.write("البحث الآن يتم عبر حسابك الخاص لتجاوز القيود")
 
+# خانة الإدخال
 user_input = st.text_input("أدخل اسم المستخدم (Username) المراد فحصه:")
 
 if st.button("فحص الحساب"):
@@ -33,24 +36,32 @@ if st.button("فحص الحساب"):
             with st.spinner('جاري تسجيل الدخول والبحث بأمان...'):
                 L = instaloader.Instaloader()
                 
-                # تسجيل الدخول باستخدام حسابك الجديد
-                L.login("anadaryyy", "mohammed_2009") 
+                # تسجيل الدخول باستخدام بياناتك الجديدة والمحدثة
+                try:
+                    L.login("anadaryyy", "Mohammed_2009")
+                except Exception as login_err:
+                    st.warning("إنستغرام يطلب تأكيد هوية. سأحاول المتابعة كزائر...")
                 
+                # جلب بيانات الحساب
                 profile = instaloader.Profile.from_username(L.context, user_input)
                 
+                # الاحتفال بالنجاح
                 st.balloons()
                 st.success(f"تم بنجاح: {profile.full_name}")
                 
+                # عرض البيانات في أعمدة
                 c1, c2 = st.columns(2)
-                c1.metric("المتابعين", f"{profile.followers:,}")
+                with c1:
+                    st.metric("المتابعين", f"{profile.followers:,}")
+                with c2:
+                    # جلب تاريخ الإنشاء التقريبي
+                    date = str(profile.created_at).split()[0] if profile.created_at else "2015"
+                    st.metric("تاريخ الإنشاء", date)
                 
-                # جلب تاريخ الإنشاء التقريبي
-                date = str(profile.created_at).split()[0] if profile.created_at else "2015"
-                c2.metric("تاريخ الإنشاء", date)
+                st.info(f"💡 نصيحة: الحساب تم إنشاؤه في: {date}")
                 
         except Exception as e:
-            # رسالة مساعدة في حال طلب إنستغرام تأكيد هوية
-            st.error("حدث خطأ! قد يحتاج إنستغرام لتأكيد هويتك.")
-            st.info("💡 افتح تطبيق إنستغرام على موبايلك بحساب anadaryyy، وإذا ظهرت رسالة 'هل هذا أنت؟' اضغط 'نعم'. ثم جرب الموقع مرة أخرى.")
+            st.error("نعتذر، حدث خطأ في الاتصال.")
+            st.info("💡 **الحل الأكيد:** افتح تطبيق إنستغرام بموبايلك بحساب anadaryyy، وإذا ظهرت رسالة 'هل هذا أنت؟' اضغط 'نعم'. ثم جرب الموقع مرة أخرى.")
     else:
-        st.warning("يرجى كتابة اليوزر!")
+        st.warning("يرجى كتابة اسم المستخدم أولاً!")
